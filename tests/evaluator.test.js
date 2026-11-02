@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict');
+const {test} = require('node:test');
+const {normalize,grade,summarize} = require('../src/evaluator.js');
+test('normalização preserva contrações e aceita pontuação e acento',()=>{assert.equal(normalize("  I'M   working, NOW! "),"i'm working now");assert.equal(normalize('Fábio.'),'fabio')});
+test('resposta previamente validada aprovada',()=>assert.equal(grade({type:'write',accept:['I am working now']},'I am working now.').status,'correct'));
+test('alternativa correta e incorreta',()=>{const q={type:'choose',answer:1};assert.equal(grade(q,'1').status,'correct');assert.equal(grade(q,'2').status,'incorrect')});
+test('resposta escrita desconhecida entra em revisão, não é reprovada',()=>assert.deepEqual(grade({type:'write',accept:['I am working now']},'I am currently working'),{status:'review',score:null}));
+test('resposta vazia não recebe crédito',()=>assert.equal(grade({type:'write',accept:['yes']},' ').status,'unanswered'));
+test('pontuação não transforma revisão em erro',()=>{const qs=[{type:'write',accept:['hello']},{type:'choose',answer:0}];const r=summarize(qs,['hi','0']);assert.equal(r.correct,1);assert.equal(r.review,1);assert.equal(r.incorrect,0)});
+test('entrada inválida produz erro explícito',()=>assert.throws(()=>summarize([],['extra']),TypeError));
